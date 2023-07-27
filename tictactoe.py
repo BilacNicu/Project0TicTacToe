@@ -1,8 +1,8 @@
 """
 Tic Tac Toe Player
 """
+
 import copy
-import math
 
 X = "X"
 O = "O"
@@ -19,127 +19,155 @@ def initial_state():
 
 
 def player(board):
-    countX = 0
-    countO = 0
-
-    for row in range(len(board)):
-        for col in range(len(board[row])):
-            if board[row][col] == X:
-                countX += 1
-            if board[row][col] == O:
-                countO +=1
-
-    if countX > countO:
-        return 0
-    else:
-        return X
-
-def actions(board):
-    allPossibleActions = set()
-
-    for row in range(len(board)):
-        for col in range(len(board[0])):
-            if board[row][col] == EMPTY:
-                allPossibleActions.add((row,col))
-
-    return allPossibleActions
-
-def result(board, action):
-
-    if action not in actions(board):
-        raise Exception("Not valid action")
-
-    row, col = action
-    board_copy = copy.deepcopy(board)
-    board_copy[row][col] = player(board)
-    return board_copy
-
-def checkRow(board, player):
-    for row in range(len(board)):
-        if board[row][0] == player and board[row][1] == board[row][2] == player:
-            return True
-    return False
-
-def checkColumn(board, player):
-    for col in range(len(board)):
-        if board[col][0] == player and board[col][1] == board[col][2] == player:
-            return True
-    return False
-
-def checkFirstDig(board, player):
+    """
+    Returns player who has the next turn on a board.
+    """
     count = 0
-    for row in range(len(board)):
-        for col in range(len(board[row])):
-            if row == col and board[row][col] == player:
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] != EMPTY:
                 count += 1
-    if count == 3:
-        return True
-    else:
-        return False
 
-def checkSecondDig(board, player):
-    count = 0
-    for row in range(len(board)):
-        for col in range(len(board[row])):
-            if (len(board) - row - 1) == col and board[row][col] == player:
-                count += 1
-    if count == 3:
-        return True
-    else:
-        return False
-
-def winner(board):
-    if checkRow(board, X) or checkColumn(board, X) or checkFirstDig(board, X) or checkSecondDig(board, X):
+    if board == initial_state():
         return X
-    if checkRow(board, O) or checkColumn(board, O) or checkFirstDig(board, O) or checkSecondDig(board, O):
+    if count % 2 == 1:
         return O
     else:
-        return None
+        return X
+
+
+
+def actions(board):
+    """
+    Returns set of all possible actions (i, j) available on the board.
+    """
+    moves = set()
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == EMPTY:
+                moves.add((i,j))
+    return moves
+
+
+def result(board, action):
+    """
+    Returns the board that results from making move (i, j) on the board.
+    """
+    if action not in actions(board):
+        raise Exception("Invalid Action!!!")
+
+    b2 = copy.deepcopy(board)
+    b2[action[0]][action[1]] = player(board)
+
+    return b2
+
+
+def winner(board):
+    """
+    Returns the winner of the game, if there is one.
+    """
+    for i in range(3):
+        if board[i][0] == board[i][1] == board[i][2]:
+            if board[i][0] == X:
+                return X
+            elif board[i][0] == O:
+                return O
+            else:
+                return None
+    for j in range(3):
+        if board[0][j] == board[1][j] == board[2][j]:
+            if board[0][j] == X:
+                return X
+            elif board[0][j] == O:
+                return O
+            else:
+                return None
+    if board[0][0] == board[1][1] == board[2][2]:
+        if board[0][0] == X:
+            return X
+        elif board[0][0] == O:
+            return O
+        else:
+            return None
+    if board[2][0] == board[1][1] == board[0][2]:
+        if board[2][0] == X:
+            return X
+        elif board[2][0] == O:
+            return O
+        else:
+            return None
+    return None
+
 
 def terminal(board):
-    if winner(board) == X:
+    """
+    Returns True if game is over, False otherwise.
+    """
+    if (winner(board) == X):
         return True
-    if winner(board) == O:
+    elif (winner(board) == O):
         return True
-    for row in range(len(board)):
-        for col in range(len(board[row])):
-            if board[row][col] == EMPTY:
+
+    for i in range(3):
+        for j in range(3):
+            if  board[i][j] == None:
                 return False
     return True
 
+
+
 def utility(board):
-    if winner(board) == X:
+    """
+    Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
+    """
+    if (winner(board) == X):
         return 1
-    elif winner(board) == O:
+    elif (winner(board) == O):
         return -1
     else:
         return 0
 
-def max_value(board):
-    v = -math.inf
-    if terminal(board):
-        return utility(board)
-    for action in actions(board):
-        v = max(v, min_value(result(board, action)))
-    return v
-def min_value(board):
-    v = -math.inf
-    if terminal(board):
-        return utility(board)
-    for action in actions(board):
-        v = max(v, min_value(result(board, action)))
-    return v
+
 def minimax(board):
+    """
+    Returns the optimal action for the current player on the board.
+    """
     if terminal(board):
         return None
-    elif player(board) == X:
-        plays = []
-        for action in actions(board):
-            plays.append([min_value(result(board, action)),action])
-        return sorted(plays, key=lambda x: x[0], reverse=True)[0][1]
+    Max = float("-inf")
+    Min = float("inf")
 
-    elif player(board) == O:
-        plays = []
-        for action in actions(board):
-            plays.append([max_value(result(board, action)),action])
-        return sorted(plays, key=lambda x: x[0])[0][1]
+    if player(board) == X:
+        return Max_Value(board, Max, Min)[1]
+    else:
+        return Min_Value(board, Max, Min)[1]
+
+def Max_Value(board, Max, Min):
+    move = None
+    if terminal(board):
+        return [utility(board), None];
+    v = float('-inf')
+    for action in actions(board):
+        test = Min_Value(result(board, action), Max, Min)[0]
+        Max = max(Max, test)
+        if test > v:
+            v = test
+            move = action
+        if Max >= Min:
+            break
+    return [v, move];
+
+def Min_Value(board, Max, Min):
+    move = None
+    if terminal(board):
+        return [utility(board), None];
+    v = float('inf')
+    for action in actions(board):
+        test = Max_Value(result(board, action), Max, Min)[0]
+        Min = min(Min, test)
+        if test < v:
+            v = test
+            move = action
+        if Max >= Min:
+            break
+    return [v, move];
